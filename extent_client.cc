@@ -12,9 +12,10 @@ extent_client::extent_client()
   es = new extent_server();
 }
 
-inode* extent_client::get_inode(uint32_t inum)
+void
+extent_client::setmtime(uint32_t inum)
 {
-    return es->get_inode(inum);
+    es->setmtime(inum);
 }
 
 extent_protocol::status

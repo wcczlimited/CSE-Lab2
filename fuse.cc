@@ -467,6 +467,18 @@ fuseserver_mkdir(fuse_req_t req, fuse_ino_t parent, const char *name,
      * note: you can use fuseserver_createhelper;
      * remember to return e using fuse_reply_entry.
      */
+     yfs_client::status res = fuseserver_createhelper(parent, name,mode,&e,extent_protocol::T_DIR);
+     if(res ==yfs_client::OK)
+     {
+        fuse_reply_entry(req, &e);
+        return;
+     }
+     else if(res == yfs_client::EXIST)
+     {
+        fuse_reply_err(req, EEXIST);
+        return;
+     }
+    return;
 
 }
 
@@ -486,7 +498,13 @@ fuseserver_unlink(fuse_req_t req, fuse_ino_t parent, const char *name)
      * success:	fuse_reply_err(req, 0);
      * not found: fuse_reply_err(req, ENOENT);
      */
-
+    int res = yfs->unlink(parent, name);
+    if(res != yfs_client::OK)
+    {
+        fuse_reply_err(req, ENOENT);
+        return;
+    }
+    fuse_reply_err(req, 0);
 }
 
 void

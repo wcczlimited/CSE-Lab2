@@ -155,7 +155,7 @@ yfs_client::setattr(inum ino, size_t size)
         if(ec->put(ino,buf) != extent_protocol::OK)
         {
             r = IOERR;
-           goto release;
+            goto release;
         }
     }
 release:
@@ -210,6 +210,7 @@ yfs_client::create(inum parent, const char *name, mode_t mode, inum &ino_out , i
         r = IOERR;
         goto release;
     }
+    ec->setmtime(parent);
 release:
     return r;
 }
@@ -369,7 +370,47 @@ int yfs_client::unlink(inum parent,const char *name)
      * note: you should remove the file using ec->remove,
      * and update the parent directory content.
      */
+    if(!isdir(parent))
+        return IOERR;
+    bool found = false;
+    inum ino;
+    if(lookup(parent, name, found, ino) != OK)
+    {
+        return IOERR;
+    }
+    if(!found)
+    {
+        return NOENT;
+    }
+    if(isdir(ino))
+    {
+        return IOERR;
+    }
+    extent_protocol::status res = ec->remove(ino);
+    if(res != extent_protocol::OK)
+    {
+        return IOERR;
+    }
+    std::string buf;
+    fileinfo fin;
+    if(getfile(parent,fin)!=OK)
+    {
+        return IOERR;
+    }
+    if(read(parent,fin.size, 0, buf) != OK)
+    {
+        return IOERR;
+    }
+    unsigned long int pos = buf.find(name);
+    int size = std::string(name).size() + filename(ino).size() + 2; // name + \0 + id + \0
+    buf.erase(pos, size);
 
+    size_t sz;
+    if(ec->put(parent,buf) != extent_protocol::OK)
+    {
+        return IOERR;
+    }
+    ec->setmtime(parent);
     return r;
 }
 

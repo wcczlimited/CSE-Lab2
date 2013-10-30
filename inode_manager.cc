@@ -139,6 +139,21 @@ inode_manager::inode_manager()
     }
 }
 
+void
+inode_manager::setmtime(uint32_t inum)
+{
+    timespec time;
+    if(clock_gettime(CLOCK_REALTIME, &time)!=0)
+    {
+        return;
+    }
+    inode* node = get_inode(inum);
+    node->mtime = time.tv_nsec;
+    node->atime = time.tv_nsec;
+    node->ctime = time.tv_nsec;
+    put_inode(inum,node);
+}
+
 /* Create a new file.
  * Return itime inum. */
 uint32_t

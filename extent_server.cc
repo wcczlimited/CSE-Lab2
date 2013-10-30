@@ -14,10 +14,10 @@ extent_server::extent_server()
   im = new inode_manager();
 }
 
-inode*
-extent_server::get_inode(uint32_t inum)
+void
+extent_server::setmtime(uint32_t inum)
 {
-    return im->get_inode(inum);
+    im->setmtime(inum);
 }
 
 int extent_server::create(uint32_t type, extent_protocol::extentid_t &id)

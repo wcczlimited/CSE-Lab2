@@ -23,7 +23,7 @@ protected:
 
 public:
     extent_server();
-    inode* get_inode(uint32_t inum);
+    void setmtime(uint32_t inum);
     int create(uint32_t type, extent_protocol::extentid_t &id);
     int put(extent_protocol::extentid_t id, std::string, int &);
     int get(extent_protocol::extentid_t id, std::string &);

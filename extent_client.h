@@ -14,7 +14,7 @@ private:
 
 public:
     extent_client();
-    inode* get_inode(uint32_t inum);
+    void setmtime(uint32_t inum);
     extent_protocol::status create(uint32_t type, extent_protocol::extentid_t &eid);
     extent_protocol::status get(extent_protocol::extentid_t eid,
                                 std::string &buf);
