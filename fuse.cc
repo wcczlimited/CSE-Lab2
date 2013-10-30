@@ -21,7 +21,7 @@
 int myid;
 yfs_client *yfs;
 
-int id() { 
+int id() {
     return myid;
 }
 
@@ -83,7 +83,7 @@ getattr(yfs_client::inum inum, struct stat &st)
 // a normal response by calling ruse_reply_xxx(req, ...). The req
 // argument serves to link up this response with the original
 // request; just pass the same @req that was passed into the handler.
-// 
+//
 // The @ino argument indicates the file or directory FUSE wants
 // you to operate on. It's a 32-bit FUSE identifier; just assign
 // it to a yfs_client::inum to get a 64-bit YFS inum.
@@ -127,7 +127,7 @@ fuseserver_setattr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
         /*
          * your lab2 code goes here.
          * note: you should use yfs->setattr to set the attr of inode inum;
-         * create a struct stat, fill it in using getattr, 
+         * create a struct stat, fill it in using getattr,
          * and reply back using fuse_reply_attr.
          */
 
@@ -144,8 +144,8 @@ fuseserver_setattr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
 // end of the file, read just that many bytes. If @off is greater
 // than or equal to the size of the file, read zero bytes.
 //
-// Ignore @fi. 
-// @req identifies this request, and is used only to send a 
+// Ignore @fi.
+// @req identifies this request, and is used only to send a
 // response back to fuse with fuse_reply_buf or fuse_reply_err.
 //
 void
@@ -155,7 +155,7 @@ fuseserver_read(fuse_req_t req, fuse_ino_t ino, size_t size,
     /*
      * your lab2 code goes here.
      * note: you should use yfs->read to read the buffer of size;
-     * and reply using fuse_reply_buf. 
+     * and reply using fuse_reply_buf.
      */
 
 }
@@ -172,7 +172,7 @@ fuseserver_read(fuse_req_t req, fuse_ino_t ino, size_t size,
 //
 // Ignore @fi.
 //
-// @req identifies this request, and is used only to send a 
+// @req identifies this request, and is used only to send a
 // response back to fuse with fuse_reply_buf or fuse_reply_err.
 //
 void
@@ -182,7 +182,7 @@ fuseserver_write(fuse_req_t req, fuse_ino_t ino,
 {
     /*
      * your lab2 code goes here.
-     * note: you should use yfs->write to write the buffer of size 
+     * note: you should use yfs->write to write the buffer of size
      * from off to ino;
      * and reply the length of bytes_written using fuse_reply_write.
      */
@@ -190,18 +190,18 @@ fuseserver_write(fuse_req_t req, fuse_ino_t ino,
 }
 
 //
-// Create file @name in directory @parent. 
+// Create file @name in directory @parent.
 //
 // - @mode specifies the create mode of the file. Ignore it - you do not
 //   have to implement file mode.
 // - If a file named @name already exists in @parent, return EXIST.
-// - Pick an ino (with type of yfs_client::inum) for file @name. 
+// - Pick an ino (with type of yfs_client::inum) for file @name.
 //   Make sure ino indicates a file, not a directory!
 // - Create an empty extent for ino.
 // - Add a <name, ino> entry into @parent.
 // - Change the parent's mtime and ctime to the current time/date
 //   (this may fall naturally out of your extent server code).
-// - On success, store the inum of newly created file into @e->ino, 
+// - On success, store the inum of newly created file into @e->ino,
 //   and the new file's attribute into @e->attr. Get the file's
 //   attributes with getattr().
 //
@@ -211,16 +211,22 @@ yfs_client::status
 fuseserver_createhelper(fuse_ino_t parent, const char *name,
         mode_t mode, struct fuse_entry_param *e)
 {
-    // In yfs, timeouts are always set to 0.0, and generations are always set to 0
-    e->attr_timeout = 0.0;
-    e->entry_timeout = 0.0;
-    e->generation = 0;
-
     /*
      * your lab2 code goes here.
      * note: you should use yfs->create to create file or directory;
      * you alse need to fill the parameter e in.
      */
+    // In yfs, timeouts are always set to 0.0, and generations are always set to 0
+    e->attr_timeout = 0.0;
+    e->entry_timeout = 0.0;
+    e->generation = 0;
+    printf("createhelper\n");
+    unsigned long long ino_out;
+    int res = yfs->create(parent,name,mode,ino_out, extent_protocol::T_FILE);
+    if(res == yfs_client::EXIST)
+        return yfs_client::EXIST;
+    e->ino = ino_out;
+    getattr(ino_out, e->attr);
 
     return yfs_client::OK;
 }
@@ -243,7 +249,7 @@ fuseserver_create(fuse_req_t req, fuse_ino_t parent, const char *name,
     }
 }
 
-void fuseserver_mknod( fuse_req_t req, fuse_ino_t parent, 
+void fuseserver_mknod( fuse_req_t req, fuse_ino_t parent,
         const char *name, mode_t mode, dev_t rdev ) {
     struct fuse_entry_param e;
     yfs_client::status ret;
@@ -266,17 +272,33 @@ void fuseserver_mknod( fuse_req_t req, fuse_ino_t parent,
 void
 fuseserver_lookup(fuse_req_t req, fuse_ino_t parent, const char *name)
 {
-    struct fuse_entry_param e;
-    // In yfs, timeouts are always set to 0.0, and generations are always set to 0
-    e.attr_timeout = 0.0;
-    e.entry_timeout = 0.0;
-    e.generation = 0;
-
     /*
      * your lab2 code goes here.
      * note: you should use yfs->lookup;
      * remember to return e using fuse_reply_entry.
      */
+    struct fuse_entry_param e;
+    // In yfs, timeouts are always set to 0.0, and generations are always set to 0
+    memset(&e,0,sizeof(fuse_entry_param));
+    //printf("@@@@@@@@@@@This is lookup\n");
+    e.attr_timeout = 0.0;
+    e.entry_timeout = 0.0;
+    e.generation = 0;
+    bool found = false;
+    unsigned long long ino_out;
+    int res = yfs->lookup(parent,name,found,ino_out);
+    if(res != yfs_client::OK)
+    {
+        printf("@@@@@@@@@@@No dir exist!\n");
+        fuse_reply_err(req,ENOENT);
+    }
+    if(found == false)
+    {
+        printf("@@@@@@@@@@@The file doesn't found\n");
+        fuse_reply_err(req,ENOENT);
+    }
+    e.ino = ino_out;
+    getattr(ino_out,e.attr);
     fuse_reply_entry(req, &e);
 }
 
@@ -340,8 +362,21 @@ fuseserver_readdir(fuse_req_t req, fuse_ino_t ino, size_t size,
      * note: you should use yfs->readdir to create file or directory;
      * what APIs you can use are: dirbuf_add, reply_buf_limited;
      * all that's left for you to do is to get the dir listing from yfs,
-     * and add it to the b data structure using dirbuf_add. 
+     * and add it to the b data structure using dirbuf_add.
      */
+
+     if(yfs->readdir(inum,list)!= yfs_client::OK)
+     {
+        fuse_reply_err(req,ENOENT);
+        return;
+     }
+    for(std::list<yfs_client::dirent>::iterator it = list.begin();
+            it != list.end();
+            it++)
+    {
+        dirbuf_add(&b,(*it).name.c_str(),(*it).inum);
+    }
+    reply_buf_limited(req,b.p,b.size,off,size);
 
 }
 
@@ -358,7 +393,7 @@ fuseserver_open(fuse_req_t req, fuse_ino_t ino,
 // Leave new directory's inum in e.ino and attributes in e.attr.
 //
 // The new directory should be empty (no . or ..).
-// 
+//
 // If a file/directory named @name already exists, indicate error EEXIST.
 //
 // Ignore mode.
@@ -479,7 +514,7 @@ main(int argc, char *argv[])
 
     fuse_args args = FUSE_ARGS_INIT( fuse_argc, (char **) fuse_argv );
     int foreground;
-    int res = fuse_parse_cmdline( &args, &mountpoint, 0 /*multithreaded*/, 
+    int res = fuse_parse_cmdline( &args, &mountpoint, 0 /*multithreaded*/,
             &foreground );
     if( res == -1 ) {
         fprintf(stderr, "fuse_parse_cmdline failed\n");

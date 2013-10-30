@@ -88,7 +88,6 @@ class inode_manager
 {
 private:
     block_manager *bm;
-    struct inode* get_inode(uint32_t inum);
     void put_inode(uint32_t inum, struct inode *ino);
     void setattr(extent_protocol::attr &a, inode* node)
     {
@@ -101,6 +100,7 @@ private:
     }
 public:
     inode_manager();
+    struct inode* get_inode(uint32_t inum);
     uint32_t alloc_inode(uint32_t type);
     void free_inode(uint32_t inum);
     void read_file(uint32_t inum, char **buf, int *size);

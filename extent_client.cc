@@ -12,6 +12,11 @@ extent_client::extent_client()
   es = new extent_server();
 }
 
+inode* extent_client::get_inode(uint32_t inum)
+{
+    return es->get_inode(inum);
+}
+
 extent_protocol::status
 extent_client::create(uint32_t type, extent_protocol::extentid_t &id)
 {
@@ -29,7 +34,7 @@ extent_client::get(extent_protocol::extentid_t eid, std::string &buf)
 }
 
 extent_protocol::status
-extent_client::getattr(extent_protocol::extentid_t eid, 
+extent_client::getattr(extent_protocol::extentid_t eid,
 		       extent_protocol::attr &attr)
 {
   extent_protocol::status ret = extent_protocol::OK;
