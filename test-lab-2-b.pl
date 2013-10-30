@@ -100,9 +100,7 @@ sub writeone {
 
 sub checkcontent {
     my($d, $name) = @_;
-
     my $f = $d . "/" . $name;
-
     open F, "$f" or die "could not open $f for reading";
     my $c2 = "";
     while(<F>) {
