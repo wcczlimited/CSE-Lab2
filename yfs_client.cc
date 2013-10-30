@@ -174,6 +174,11 @@ yfs_client::create(inum parent, const char *name, mode_t mode, inum &ino_out , i
     bool found = false;
     std::string buf,str(name), sinum;
     fileinfo fin;
+    if(!isdir(parent))
+    {
+        r = NOENT;
+        goto release;
+    }
     if(lookup(parent, name, found, ino_out) != OK)
     {
         r = IOERR;
@@ -202,9 +207,7 @@ yfs_client::create(inum parent, const char *name, mode_t mode, inum &ino_out , i
     sinum = filename(ino_out);
     if(fin.size!=0)
         buf.append(" ");
-    buf.append(str);
-    buf.append(" ");
-    buf.append(sinum);
+    buf.append(str+" "+sinum);
     if(ec->put(parent,buf) != extent_protocol::OK)
     {
         r = IOERR;
@@ -226,6 +229,11 @@ yfs_client::lookup(inum parent, const char *name, bool &found, inum &ino_out)
     int r = OK;
     std::list<dirent> list;
     std::string namestr;
+    if(!isdir(parent))
+    {
+        r = NOENT;
+        goto release;
+    }
     if(readdir(parent,list) != OK)
     {
         r = IOERR;
@@ -258,6 +266,11 @@ yfs_client::readdir(inum dir, std::list<dirent> &list)
     fileinfo fin;
     std::string out;
     std::stringstream stream;
+    if(!isdir(dir))
+    {
+        r = NOENT;
+        goto release;
+    }
     if(getfile(dir,fin) != OK)
     {
         r = IOERR;
@@ -329,12 +342,9 @@ yfs_client::write(inum ino, size_t size, off_t off, const char *data,
     if(off > buf.size())
     {
         std::string new_buf="";
-        for(int i=0; i<buf.size(); i++)
-            new_buf.append(1,buf[i]);
-        for(int i=buf.size(); i<off; i++)
-            new_buf.append(1,'\0');
-        for(int i=0; i<size; i++)
-            new_buf.append(1, new_data[i]);
+        new_buf.append(buf);
+        new_buf.append(off-buf.size(),'\0');
+        new_buf.append(new_data,0,size);
         buf.assign(new_buf);
     }
     else if(off + size > buf.size())

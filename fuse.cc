@@ -416,8 +416,8 @@ fuseserver_readdir(fuse_req_t req, fuse_ino_t ino, size_t size,
      * all that's left for you to do is to get the dir listing from yfs,
      * and add it to the b data structure using dirbuf_add.
      */
-
-    if(yfs->readdir(inum,list)!= yfs_client::OK)
+    int res = yfs->readdir(inum,list);
+    if(res != yfs_client::OK)
     {
         fuse_reply_err(req,ENOENT);
         return;
@@ -429,7 +429,6 @@ fuseserver_readdir(fuse_req_t req, fuse_ino_t ino, size_t size,
         dirbuf_add(&b,(*it).name.c_str(),(*it).inum);
     }
     reply_buf_limited(req,b.p,b.size,off,size);
-
 }
 
 
