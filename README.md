@@ -1,4 +1,6 @@
-CSE-Lab2
-========
+node(uint32_t inum) to extent_server
+add get_inode(uint32_t inum) to extent_client
+make get_inode(uint32_t inum) public
 
-FUSE and YFS client
+For dir inode, the inode content is blocknum -> inodeid + filename
+
